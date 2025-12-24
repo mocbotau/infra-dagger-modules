@@ -1,0 +1,7 @@
+{
+  "name": "python-ci",
+  "engineVersion": "v0.19.8",
+  "sdk": {
+    "source": "go"
+  }
+}
