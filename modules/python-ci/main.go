@@ -36,14 +36,14 @@ func (m *PythonCi) Base() *dagger.Container {
 // Lint runs flake8 linting on the Python source code
 func (m *PythonCi) Lint(ctx context.Context) (string, error) {
 	return m.Base().
-		WithDirectory("/src", m.Source).
 		WithMountedCache(
 			"/root/.cache/pip",
 			dag.CacheVolume("pip-cache"),
 		).
-		WithWorkdir("/src").
 		WithExec([]string{"pip", "install", "--upgrade", "pip"}).
 		WithExec([]string{"pip", "install", "flake8==7.0.0"}).
+		WithDirectory("/src", m.Source).
+		WithWorkdir("/src").
 		WithExec([]string{"flake8", "."}).
 		Stdout(ctx)
 }

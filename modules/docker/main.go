@@ -1,37 +1,94 @@
-// A generated module for Docker functions
-//
-// This module has been generated via dagger init and serves as a reference to
-// basic module structure as you get started with Dagger.
-//
-// Two functions have been pre-created. You can modify, delete, or add to them,
-// as needed. They demonstrate usage of arguments and return types using simple
-// echo and grep commands. The functions can be called from the dagger CLI or
-// from one of the SDKs.
-//
-// The first line in this comment block is a short description line and the
-// rest is a long description with more detail on the module's purpose or usage,
-// if appropriate. All modules should have a short description.
-
 package main
 
 import (
 	"context"
+	"fmt"
+
 	"dagger/docker/internal/dagger"
 )
 
-type Docker struct{}
+const (
+	registryRepo = "cloud"
+)
 
-// Returns a container that echoes whatever string argument is provided
-func (m *Docker) ContainerEcho(stringArg string) *dagger.Container {
-	return dag.Container().From("alpine:latest").WithExec([]string{"echo", stringArg})
+type Docker struct {
+	// +private
+	Container *dagger.Container
+	// +private
+	Environment string
+	// +private
+	InfisicalClientSecret *dagger.Secret
+	// +private
+	RepoName string
+	// +private
+	Source *dagger.Directory
 }
 
-// Returns lines that match a pattern in the files of the provided Directory
-func (m *Docker) GrepDir(ctx context.Context, directoryArg *dagger.Directory, pattern string) (string, error) {
-	return dag.Container().
-		From("alpine:latest").
-		WithMountedDirectory("/mnt", directoryArg).
-		WithWorkdir("/mnt").
-		WithExec([]string{"grep", "-R", pattern, "."}).
-		Stdout(ctx)
+func New(
+	// The source code directory containing the Dockerfile
+	source *dagger.Directory,
+	// The Infisical client secret for retrieving Docker Hub credentials
+	infisicalClientSecret *dagger.Secret,
+	// The repository name for the Docker image
+	repoName string,
+	// The environment to tag the Docker image with
+	// +default="staging"
+	environment string,
+) *Docker {
+	return &Docker{
+		Environment:           environment,
+		InfisicalClientSecret: infisicalClientSecret,
+		RepoName:              repoName,
+		Source:                source,
+	}
+}
+
+// Build builds the Dockerfile present in the source directory
+func (m *Docker) Build(ctx context.Context) *Docker {
+	m.Container = m.Source.DockerBuild()
+	return m
+}
+
+// BuildContainer builds the passed in Docker container
+func (m *Docker) BuildContainer(ctx context.Context, container *dagger.Container) *Docker {
+	m.Container = container
+	return m
+}
+
+// GetContainer returns the built Docker container
+func (m *Docker) GetContainer(ctx context.Context) (*dagger.Container, error) {
+	return m.Container.Sync(ctx)
+}
+
+// Publish builds and pushes the container image to Docker Hub
+func (m *Docker) Publish(ctx context.Context) (string, error) {
+	if m.Container == nil {
+		return "", fmt.Errorf("container is not built yet")
+	}
+
+	if m.RepoName == "" {
+		return "", fmt.Errorf("repository name is not set")
+	}
+
+	infisical := dag.Infisical(m.InfisicalClientSecret, m.Environment)
+
+	username := infisical.GetSecret("DOCKERHUB_USERNAME")
+	password := infisical.GetSecret("DOCKERHUB_PASSWORD")
+
+	usernameString, err := username.Plaintext(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get dockerhub username: %w", err)
+	}
+
+	imageTag := fmt.Sprintf("%s/%s:%s-%s", usernameString, registryRepo, m.RepoName, m.Environment)
+
+	address, err := m.Container.
+		WithRegistryAuth("docker.io", usernameString, password).
+		Publish(ctx, imageTag)
+
+	if err != nil {
+		return "", fmt.Errorf("failed to publish image: %w", err)
+	}
+
+	return address, nil
 }
