@@ -16,6 +16,7 @@ type PythonCi struct {
 
 func New(
 	// The source code directory
+	// +ignore=["**/.venv", "**/__pycache__", "**/.MOCBOT"]
 	source *dagger.Directory,
 	// The Python version to use
 	// +default="3.14"
