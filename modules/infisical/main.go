@@ -27,7 +27,7 @@ type Infisical struct {
 func New(
 	ctx context.Context,
 	// The Infisical Client ID
-	// +default="858472ca-5b71-4b9c-a7fd-4c9a971e5758"
+	// +default="cb7bfedd-8e71-41ff-9e5f-4703b3f298cb"
 	clientId string,
 	// The Infisical Client Secret
 	clientSecret *dagger.Secret,

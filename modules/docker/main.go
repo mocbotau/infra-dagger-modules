@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"dagger/docker/internal/dagger"
 )
@@ -44,8 +45,28 @@ func New(
 }
 
 // Build builds the Dockerfile present in the source directory
-func (m *Docker) Build(ctx context.Context) *Docker {
-	m.Container = m.Source.DockerBuild()
+func (m *Docker) Build(
+	ctx context.Context,
+	// Build arguments to pass to the Docker build process. Format KEY=VALUE
+	// +optional
+	buildArgs []string,
+) *Docker {
+	args := make([]dagger.BuildArg, 0)
+
+	for _, arg := range buildArgs {
+		parts := strings.Split(arg, "=")
+		if len(parts) == 2 {
+			args = append(args, dagger.BuildArg{
+				Name:  parts[0],
+				Value: parts[1],
+			})
+		}
+	}
+
+	m.Container = m.Source.DockerBuild(dagger.DirectoryDockerBuildOpts{
+		BuildArgs: args,
+	})
+
 	return m
 }
 
