@@ -1,3 +1,4 @@
+// A Dagger module for building and publishing Docker images
 package main
 
 import (

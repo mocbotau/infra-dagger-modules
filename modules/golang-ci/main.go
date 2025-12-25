@@ -1,3 +1,4 @@
+// A Dagger module for Golang CI tasks
 package main
 
 import (

@@ -1,3 +1,4 @@
+// A Dagger module for Node.js CI tasks, supporting multiple package managers and common tasks
 package main
 
 import (

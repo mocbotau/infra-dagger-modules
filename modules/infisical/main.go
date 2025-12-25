@@ -1,3 +1,4 @@
+// A Dagger module for managing secrets with Infisical
 package main
 
 import (

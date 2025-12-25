@@ -1,3 +1,4 @@
+// A Dagger module for Python CI tasks
 package main
 
 import (
