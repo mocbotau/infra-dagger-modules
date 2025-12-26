@@ -109,7 +109,7 @@ func (m *GitRepo) GetNextVersion(
 
 	if bumpType == BumpSkip {
 		// No version bump
-		return latestTag, nil
+		return "", ErrVersionBumpSkipped
 	}
 
 	switch bumpType {
@@ -145,6 +145,10 @@ func (m *GitRepo) TagAndPush(
 	if version == "" {
 		var err error
 		version, err = m.GetNextVersion(ctx, forceBump)
+		if err == ErrVersionBumpSkipped {
+			return "", nil // No tag created
+		}
+
 		if err != nil {
 			return "", fmt.Errorf("failed to determine next version: %w", err)
 		}
