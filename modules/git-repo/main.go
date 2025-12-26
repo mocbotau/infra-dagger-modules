@@ -26,6 +26,7 @@ type GitRepo struct {
 type BumpType string
 
 const (
+	BumpSkip  BumpType = "skip"
 	BumpPatch BumpType = "patch"
 	BumpMinor BumpType = "minor"
 	BumpMajor BumpType = "major"
@@ -59,6 +60,9 @@ func New(
 // and returns it as a string (e.g., "v1.2.3").
 // By default, it will analyse the most recent commit messages for version bump markers, for instance:
 //   - [major] in commit message -> major version bump (v1.0.0 -> v2.0.0)
+//   - [minor] in commit message -> minor version bump (v1.0.0 -> v1.1.0)
+//   - [patch] in commit message -> patch version bump (v1.0.0 -> v1.0.1)
+//   - [skip] in commit message -> no version bump (v1.0.0 -> v1.0.0)
 //   - default (no marker) -> minor version bump (v1.0.0 -> v1.1.0)
 func (m *GitRepo) GetNextVersion(
 	ctx context.Context,
@@ -101,6 +105,11 @@ func (m *GitRepo) GetNextVersion(
 		if err == nil {
 			bumpType = determineBumpType(commitMsg)
 		}
+	}
+
+	if bumpType == BumpSkip {
+		// No version bump
+		return latestTag, nil
 	}
 
 	switch bumpType {
@@ -179,6 +188,10 @@ func parseVersion(version string) (major, minor, patch int, err error) {
 // determineBumpType analyses commit messages to determine the appropriate version bump
 func determineBumpType(commitMessages string) BumpType {
 	lowerMessages := strings.ToLower(commitMessages)
+
+	if strings.Contains(lowerMessages, "[skip]") {
+		return BumpSkip
+	}
 
 	if strings.Contains(lowerMessages, "[major]") {
 		return BumpMajor
