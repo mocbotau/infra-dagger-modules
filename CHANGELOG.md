@@ -1,3 +1,7 @@
+Version 0.2.0
+
+- Move repo name in Blueprint generic-deploy to function level
+
 Version 0.1.2
 
 - Add support for Docker images to have no environment

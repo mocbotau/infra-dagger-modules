@@ -7,9 +7,6 @@ import (
 )
 
 type GenericDeploy struct {
-	// Repo name
-	// +private
-	RepoName string
 	// Source code directory
 	// +private
 	Source *dagger.Directory
@@ -18,15 +15,12 @@ type GenericDeploy struct {
 }
 
 func New(
-	// Repo name
-	repoName string,
 	// Source code directory
 	// +defaultPath="."
 	source *dagger.Directory,
 	infisicalClientSecret *dagger.Secret,
 ) *GenericDeploy {
 	return &GenericDeploy{
-		RepoName:              repoName,
 		Source:                source,
 		InfisicalClientSecret: infisicalClientSecret,
 	}
@@ -38,11 +32,12 @@ func (m *GenericDeploy) BuildAndPush(
 	// Environment to build image for
 	// +default="staging"
 	env string,
+	repoName string,
 	// Additional build arguments, format KEY=VALUE
 	// +optional
 	buildArgs []string,
 ) (string, error) {
-	docker := dag.Docker(m.Source, m.InfisicalClientSecret, m.RepoName, dagger.DockerOpts{
+	docker := dag.Docker(m.Source, m.InfisicalClientSecret, repoName, dagger.DockerOpts{
 		Environment: env,
 	})
 
