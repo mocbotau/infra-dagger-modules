@@ -4,23 +4,19 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      force-bump:
+        type: choice
+        description: "Force version bump type (major, minor, patch)"
+        required: false
+        options:
+          - major
+          - minor
+          - patch
 
 jobs:
-  deploy:
-    runs-on: ubuntu-dagger
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.9.1
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Set Version
-        run: |
-          dagger call git-repo --ssh=${SSH_AUTH_SOCK} \
-            tag-and-push
+  set-version:
+    uses: mocbotau/infra-workflows/.github/workflows/generic-set-version.yaml@v0.1.1
+    secrets: inherit
+    with:
+      force-bump: ${{ github.event.inputs.force-bump }}
