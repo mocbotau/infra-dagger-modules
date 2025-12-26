@@ -34,7 +34,7 @@ func New(
 	// The repository name for the Docker image
 	repoName string,
 	// The environment to tag the Docker image with
-	// +default="staging"
+	// +optional
 	environment string,
 ) *Docker {
 	return &Docker{
@@ -92,7 +92,12 @@ func (m *Docker) Publish(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("repository name is not set")
 	}
 
-	infisical := dag.Infisical(m.InfisicalClientSecret, m.Environment)
+	env := m.Environment
+	if env == "" {
+		env = "staging"
+	}
+
+	infisical := dag.Infisical(m.InfisicalClientSecret, env)
 
 	username := infisical.GetSecret("DOCKERHUB_USERNAME")
 	password := infisical.GetSecret("DOCKERHUB_PASSWORD")
@@ -103,6 +108,9 @@ func (m *Docker) Publish(ctx context.Context) (string, error) {
 	}
 
 	imageTag := fmt.Sprintf("%s/%s:%s-%s", usernameString, registryRepo, m.RepoName, m.Environment)
+	if m.Environment == "" {
+		imageTag = fmt.Sprintf("%s/%s:%s", usernameString, registryRepo, m.RepoName)
+	}
 
 	address, err := m.Container.
 		WithRegistryAuth("docker.io", usernameString, password).
