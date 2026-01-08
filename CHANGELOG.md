@@ -1,3 +1,7 @@
+Version 0.2.1
+
+- Bump Dagger version to v0.19.9
+
 Version 0.2.0
 
 - Move repo name in Blueprint generic-deploy to function level
