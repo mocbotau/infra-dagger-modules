@@ -1,3 +1,7 @@
+Version 0.2.2
+
+- Bump Dagger version to v0.20.1
+
 Version 0.2.1
 
 - Bump Dagger version to v0.19.9
